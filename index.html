@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GameSpark AI | סטודיו משחקים לילדים</title>
+    <meta
+      name="description"
+      content="GameSpark AI הוא סטודיו משחקים אינטראקטיבי בעברית שבו ילדים יוצרים רעיונות למשחקים בעזרת בינה מלאכותית."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Rubik:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar" aria-label="ניווט ראשי">
+        <a class="brand" href="#home" aria-label="GameSpark AI">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span>
+          </span>
+          <span class="brand-text">
+            <strong>GameSpark</strong>
+            <small>AI</small>
+          </span>
+        </a>
+
+        <nav class="desktop-nav" aria-label="קישורי אתר">
+          <a href="#studio">סטודיו יצירה</a>
+          <a href="#gallery">משחקים שנוצרו</a>
+          <a href="#parents">להורים ולמורים</a>
+          <a href="#path">מסלול למידה</a>
+        </nav>
+
+        <div class="topbar-actions">
+          <button class="icon-button" id="soundToggle" type="button" aria-label="הפעל או כבה סאונד">
+            <i data-lucide="volume-2" aria-hidden="true"></i>
+          </button>
+          <a class="primary-button compact" href="#studio">
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            התחילו ליצור
+          </a>
+          <button class="icon-button menu-toggle" id="menuToggle" type="button" aria-label="פתח תפריט">
+            <i data-lucide="menu" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <nav class="mobile-nav" id="mobileNav" aria-label="ניווט מובייל">
+          <a href="#studio">סטודיו יצירה</a>
+          <a href="#gallery">משחקים שנוצרו</a>
+          <a href="#parents">להורים ולמורים</a>
+          <a href="#path">מסלול למידה</a>
+        </nav>
+      </header>
+
+      <main id="home">
+        <section class="hero-section" aria-labelledby="hero-title">
+          <div class="hero-copy reveal">
+            <p class="eyebrow">
+              <span class="pulse-dot" aria-hidden="true"></span>
+              סטודיו משחקים לילדים בעזרת AI
+            </p>
+            <h1 id="hero-title">הילדים בונים משחקים. ה-AI הופך רעיונות לעולמות.</h1>
+            <p class="hero-lede">
+              GameSpark AI נותן לילדים להתחיל מרעיון פשוט, לבחור דמות ועולם, ולקבל תצוגת משחק חיה
+              בלי להיתקע על קוד לפני שהדמיון נדלק.
+            </p>
+            <div class="hero-actions">
+              <a class="primary-button" href="#studio">
+                <i data-lucide="wand-sparkles" aria-hidden="true"></i>
+                צור משחק ראשון
+              </a>
+              <a class="ghost-button" href="#gallery">
+                <i data-lucide="gamepad-2" aria-hidden="true"></i>
+                ראו דוגמאות
+              </a>
+            </div>
+            <div class="hero-metrics" aria-label="נתוני פלטפורמה">
+              <span><strong>3</strong> דקות מרעיון לפרוטוטייפ</span>
+              <span><strong>24</strong> משימות יצירה</span>
+              <span><strong>RTL</strong> עברית מלאה</span>
+            </div>
+          </div>
+
+          <div class="hero-visual reveal delay-1" aria-label="תצוגת סטודיו משחקים">
+            <div class="device-frame">
+              <div class="device-toolbar">
+                <span></span>
+                <span></span>
+                <span></span>
+                <p>Live Game Studio</p>
+              </div>
+              <div class="mini-studio">
+                <div class="mini-chat">
+                  <i data-lucide="bot" aria-hidden="true"></i>
+                  <p>בואו נהפוך את הרעיון שלך למשחק עם שלבים, דמות ואתגר.</p>
+                </div>
+                <div class="mini-world">
+                  <div class="pixel-sky" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <div class="pixel-character" aria-hidden="true"></div>
+                  <div class="pixel-platforms" aria-hidden="true">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+                <div class="mini-command">
+                  <span>משחק חלל עם רובוט שמציל כוכבים</span>
+                  <button type="button">צור</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="studio-section" id="studio" aria-labelledby="studio-title">
+          <div class="section-heading reveal">
+            <p class="eyebrow">סטודיו יצירה פעיל</p>
+            <h2 id="studio-title">בחרו רעיון, ז'אנר, דמות ועולם. התצוגה מתעדכנת מיד.</h2>
+          </div>
+
+          <div class="studio-layout">
+            <aside class="studio-controls reveal delay-1" aria-label="בקרות יצירת משחק">
+              <label class="field-label" for="ideaInput">רעיון המשחק</label>
+              <div class="idea-box">
+                <textarea
+                  id="ideaInput"
+                  maxlength="110"
+                  rows="3"
+                  placeholder="לדוגמה: משחק חלל שבו ילדה אוספת כוכבים לפני שהזמן נגמר"
+                >משחק חלל שבו ילדה אוספת כוכבים לפני שהזמן נגמר</textarea>
+                <button class="icon-button" id="randomIdea" type="button" aria-label="הצע רעיון חדש">
+                  <i data-lucide="dice-5" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <div class="control-group">
+                <div class="group-title">
+                  <i data-lucide="shapes" aria-hidden="true"></i>
+                  ז'אנר
+                </div>
+                <div class="option-grid" id="genreOptions"></div>
+              </div>
+
+              <div class="control-group">
+                <div class="group-title">
+                  <i data-lucide="user-round" aria-hidden="true"></i>
+                  דמות ראשית
+                </div>
+                <div class="avatar-row" id="characterOptions"></div>
+              </div>
+
+              <div class="control-group">
+                <div class="group-title">
+                  <i data-lucide="map" aria-hidden="true"></i>
+                  עולם משחק
+                </div>
+                <div class="world-list" id="worldOptions"></div>
+              </div>
+            </aside>
+
+            <section class="preview-stage reveal delay-2" aria-label="תצוגה מקדימה של המשחק">
+              <div class="preview-header">
+                <div>
+                  <p class="preview-kicker">Preview חי</p>
+                  <h3 id="previewTitle">כוכבי הצלה</h3>
+                </div>
+                <div class="status-pill" id="buildStatus">
+                  <span class="status-light"></span>
+                  מוכן ליצירה
+                </div>
+              </div>
+
+              <div class="game-screen">
+                <canvas id="gameCanvas" width="960" height="560" aria-label="תצוגת עולם המשחק"></canvas>
+                <div class="hud top-hud">
+                  <span id="hudGenre">חלל</span>
+                  <span id="hudGoal">אספו 12 כוכבים</span>
+                  <span id="hudTimer">02:40</span>
+                </div>
+                <div class="hud bottom-hud">
+                  <span id="hudIdea">משחק חלל שבו ילדה אוספת כוכבים לפני שהזמן נגמר</span>
+                </div>
+                <div class="ai-thinking" id="aiThinking" aria-live="polite">
+                  <i data-lucide="cpu" aria-hidden="true"></i>
+                  <span>ה-AI בונה שלב ראשון...</span>
+                </div>
+              </div>
+
+              <div class="preview-footer">
+                <div class="build-summary">
+                  <span id="selectedCharacter">מיקה</span>
+                  <span id="selectedWorld">תחנת חלל</span>
+                  <span id="selectedMechanic">איסוף כוכבים</span>
+                </div>
+                <button class="primary-button wide" id="createGame" type="button">
+                  <i data-lucide="play" aria-hidden="true"></i>
+                  צור משחק
+                </button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="gallery-section" id="gallery" aria-labelledby="gallery-title">
+          <div class="section-heading reveal">
+            <p class="eyebrow">משחקים שילדים יצרו</p>
+            <h2 id="gallery-title">רעיונות קטנים שהפכו לעולמות משחקים.</h2>
+          </div>
+
+          <div class="game-gallery" id="gameGallery"></div>
+        </section>
+
+        <section class="trust-section" id="parents" aria-labelledby="parents-title">
+          <div class="trust-copy reveal">
+            <p class="eyebrow">להורים ולמורים</p>
+            <h2 id="parents-title">יצירתיות, חשיבה לוגית ובטיחות - באותו מרחב.</h2>
+            <p>
+              הילדים עובדים עם רעיונות, סיבות ותוצאות: מה הדמות רוצה, מה האתגר, איך מנצחים,
+              ואיך משפרים את המשחק אחרי ניסיון ראשון.
+            </p>
+          </div>
+          <div class="trust-grid reveal delay-1">
+            <article>
+              <i data-lucide="brain-circuit" aria-hidden="true"></i>
+              <h3>חשיבה מערכתית</h3>
+              <p>ילדים מתרגלים חוקים, מטרות, משוב ושלבים.</p>
+            </article>
+            <article>
+              <i data-lucide="shield-check" aria-hidden="true"></i>
+              <h3>מרחב בטוח</h3>
+              <p>שפה ידידותית, תוצרים מדומים ושיתוף מבוקר.</p>
+            </article>
+            <article>
+              <i data-lucide="graduation-cap" aria-hidden="true"></i>
+              <h3>למידה דרך משחק</h3>
+              <p>הילדים לומדים לתכנן, לבדוק, לשפר ולספר סיפור.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="path-section" id="path" aria-labelledby="path-title">
+          <div class="section-heading reveal">
+            <p class="eyebrow">מסלול יצירה</p>
+            <h2 id="path-title">מהרעיון הראשון ועד משחק שאפשר להציג.</h2>
+          </div>
+          <div class="path-steps reveal delay-1">
+            <div class="path-step">
+              <span>01</span>
+              <h3>רעיון</h3>
+              <p>כותבים משפט אחד על המשחק.</p>
+            </div>
+            <div class="path-step">
+              <span>02</span>
+              <h3>עולם</h3>
+              <p>בוחרים סביבה, דמות ומטרה.</p>
+            </div>
+            <div class="path-step">
+              <span>03</span>
+              <h3>פרוטוטייפ</h3>
+              <p>מקבלים תצוגה שאפשר לשנות מיד.</p>
+            </div>
+            <div class="path-step">
+              <span>04</span>
+              <h3>שיפור</h3>
+              <p>בודקים, משנים חוקים ומציגים.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <a class="brand" href="#home" aria-label="GameSpark AI">
+          <span class="brand-mark" aria-hidden="true"><span></span></span>
+          <span class="brand-text"><strong>GameSpark</strong><small>AI</small></span>
+        </a>
+        <p>סטודיו משחקים יצירתי לילדים, הורים ומורים.</p>
+        <div class="footer-links">
+          <a href="#studio">יצירה</a>
+          <a href="#gallery">גלריה</a>
+          <a href="#parents">בטיחות</a>
+          <a href="mailto:hello@gamespark.local">צור קשר</a>
+        </div>
+      </footer>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

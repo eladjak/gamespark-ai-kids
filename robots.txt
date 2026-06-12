@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gamespark-ai-kids.vercel.app/sitemap.xml

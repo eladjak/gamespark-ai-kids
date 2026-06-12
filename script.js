@@ -178,6 +178,26 @@ function renderOptions() {
   window.lucide?.createIcons();
 }
 
+// Map each gallery item's Hebrew genre label back to a real genre/world/character
+const genreByLabel = Object.fromEntries(genres.map((gn) => [gn.label, gn]));
+const galleryConfig = [
+  { genre: "חלל", world: "station", character: "mika" },
+  { genre: "הרפתקה", world: "forest", character: "noam" },
+  { genre: "מירוץ", world: "city", character: "ziv" },
+  { genre: "פאזל", world: "ocean", character: "raya" },
+  { genre: "פלטפורמה", world: "castle", character: "ziv" },
+  { genre: "הרפתקה", world: "city", character: "raya" },
+];
+
+function gallerySelection(index) {
+  const item = galleryItems[index];
+  const map = galleryConfig[index] || galleryConfig[0];
+  const genre = genreByLabel[map.genre] || genres[0];
+  const world = worlds.find((w) => w.id === map.world) || worlds[0];
+  const character = characters.find((c) => c.id === map.character) || characters[0];
+  return { genre, world, character, idea: item.title, title: item.title };
+}
+
 function renderGallery() {
   elements.gallery.innerHTML = galleryItems
     .map(
@@ -190,10 +210,22 @@ function renderGallery() {
             <span>${item.genre}</span>
             <span>AI Prototype</span>
           </div>
+          <button class="primary-button wide game-play" type="button" data-play="${index}">
+            ${icon("play")} שחקו עכשיו
+          </button>
         </article>
       `
     )
     .join("");
+
+  elements.gallery.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-play]");
+    if (!button) return;
+    const index = Number(button.dataset.play);
+    window.GameSpark?.launch(gallerySelection(index));
+  });
+
+  window.lucide?.createIcons();
 }
 
 function titleFromIdea(idea) {
@@ -412,27 +444,40 @@ function draw() {
   requestAnimationFrame(draw);
 }
 
+function currentSelection() {
+  const idea = elements.ideaInput.value.trim() || "משחק חדש שמתחיל מרעיון קטן";
+  return {
+    genre: state.genre,
+    character: state.character,
+    world: state.world,
+    idea,
+    title: titleFromIdea(idea) || "המשחק שלי",
+  };
+}
+
 function simulateCreate() {
   if (state.building) return;
   state.building = true;
   elements.createGame.disabled = true;
-  elements.createGame.innerHTML = `${icon("loader-circle")} יוצר משחק...`;
+  elements.createGame.innerHTML = `${icon("loader-circle")} בונה משחק...`;
   elements.buildStatus.classList.add("is-building");
   elements.buildStatus.lastChild.textContent = " בבנייה";
   elements.aiThinking.classList.add("is-visible");
   window.lucide?.createIcons();
 
+  // Short "AI is building" beat, then launch the REAL playable game.
   setTimeout(() => {
     state.createdCount += 1;
     state.building = false;
     elements.createGame.disabled = false;
-    elements.createGame.innerHTML = `${icon("play")} צור עוד גרסה`;
+    elements.createGame.innerHTML = `${icon("play")} שחקו שוב`;
     elements.buildStatus.classList.remove("is-building");
-    elements.buildStatus.lastChild.textContent = " פרוטוטייפ מוכן";
+    elements.buildStatus.lastChild.textContent = " המשחק מוכן";
     elements.aiThinking.classList.remove("is-visible");
     updatePreview();
     window.lucide?.createIcons();
-  }, 1350);
+    window.GameSpark?.launch(currentSelection());
+  }, 900);
 }
 
 function initInteractions() {

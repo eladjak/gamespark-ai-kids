@@ -55,7 +55,7 @@
           "isPartOf": { "@id": "https://gamespark-ai-kids.vercel.app/#website" },
           "inLanguage": "he-IL",
           "datePublished": "2026-05-13",
-          "dateModified": "2026-06-13"
+          "dateModified": "2026-06-14"
         },
         {
           "@type": "FAQPage",
@@ -64,7 +64,9 @@
             { "@type": "Question", "name": "האם צריך לדעת לתכנת?", "acceptedAnswer": { "@type": "Answer", "text": "לא. הילדים יוצרים משחקים בלי לכתוב שורת קוד אחת - בוחרים אפשרויות ומשחקים." } },
             { "@type": "Question", "name": "אילו סוגי משחקים אפשר ליצור?", "acceptedAnswer": { "@type": "Answer", "text": "חמישה סוגים: חלל (איסוף כוכבים), הרפתקה (מציאת מפתחות), פאזל (טבעות לפי סדר), מירוץ (התחמקות ממכשולים) ופלטפורמה (קפיצות אל הדגל)." } },
             { "@type": "Question", "name": "איך משחקים?", "acceptedAnswer": { "@type": "Answer", "text": "במחשב משחקים עם חצי המקלדת ומקש הרווח, ובטלפון או טאבלט עם כפתורי מגע על המסך." } },
-            { "@type": "Question", "name": "האם זה בטוח לילדים?", "acceptedAnswer": { "@type": "Answer", "text": "כן. המרחב ידידותי, בעברית מלאה, בלי תשלום ובלי איסוף נתונים - הכל רץ בדפדפן." } }
+            { "@type": "Question", "name": "האם זה בטוח לילדים?", "acceptedAnswer": { "@type": "Answer", "text": "כן. המרחב ידידותי, בעברית מלאה, בלי תשלום ובלי איסוף נתונים - הכל רץ בדפדפן." } },
+            { "@type": "Question", "name": "אפשר לבחור רמת קושי ולעבור שלבים?", "acceptedAnswer": { "@type": "Answer", "text": "כן. לכל משחק יש שלוש רמות קושי (קל, רגיל, קשה) ושלושה שלבים שמתקדמים ונעשים מאתגרים יותר אחרי כל ניצחון." } },
+            { "@type": "Question", "name": "אפשר לשמור ולשתף משחק שיצרתי?", "acceptedAnswer": { "@type": "Answer", "text": "כן. כל משחק שיוצרים נשמר ב\"המרחב שלי\" בדפדפן כדי לשחק בו שוב, ואפשר לשתף אותו עם חברים בקישור אחד שמשיק את אותו משחק בדיוק." } }
           ]
         }
       ]
@@ -86,6 +88,7 @@
 
         <nav class="desktop-nav" aria-label="קישורי אתר">
           <a href="#studio">סטודיו יצירה</a>
+          <a href="#mygames">המרחב שלי</a>
           <a href="#gallery">משחקים שנוצרו</a>
           <a href="#parents">להורים ולמורים</a>
           <a href="#path">מסלול למידה</a>
@@ -106,6 +109,7 @@
 
         <nav class="mobile-nav" id="mobileNav" aria-label="ניווט מובייל">
           <a href="#studio">סטודיו יצירה</a>
+          <a href="#mygames">המרחב שלי</a>
           <a href="#gallery">משחקים שנוצרו</a>
           <a href="#parents">להורים ולמורים</a>
           <a href="#path">מסלול למידה</a>
@@ -136,6 +140,7 @@
             </div>
             <div class="hero-metrics" aria-label="נתוני פלטפורמה">
               <span><strong>5</strong> סוגי משחק לשחק בהם</span>
+              <span><strong>3</strong> רמות קושי ושלבים</span>
               <span><strong>0</strong> שורות קוד ללמוד</span>
               <span><strong>RTL</strong> עברית מלאה</span>
             </div>
@@ -221,6 +226,14 @@
                 </div>
                 <div class="world-list" id="worldOptions"></div>
               </div>
+
+              <div class="control-group">
+                <div class="group-title">
+                  <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+                  רמת קושי
+                </div>
+                <div class="option-grid diff-grid" id="difficultyOptions"></div>
+              </div>
             </aside>
 
             <section class="preview-stage reveal delay-2" aria-label="תצוגה מקדימה של המשחק">
@@ -257,13 +270,47 @@
                   <span id="selectedWorld">תחנת חלל</span>
                   <span id="selectedMechanic">איסוף כוכבים</span>
                 </div>
-                <button class="primary-button wide" id="createGame" type="button">
-                  <i data-lucide="play" aria-hidden="true"></i>
-                  צור משחק
-                </button>
+                <div class="footer-buttons">
+                  <button class="primary-button wide" id="createGame" type="button">
+                    <i data-lucide="play" aria-hidden="true"></i>
+                    צור משחק
+                  </button>
+                  <button class="ghost-button share-button" id="shareGame" type="button">
+                    <i data-lucide="share-2" aria-hidden="true"></i>
+                    שתפו את היצירה
+                  </button>
+                </div>
               </div>
             </section>
           </div>
+        </section>
+
+        <section class="mygames-section" id="mygames" aria-labelledby="mygames-title">
+          <div class="section-heading reveal">
+            <p class="eyebrow">המרחב שלי</p>
+            <h2 id="mygames-title">המשחקים שיצרתם וההישגים שלכם.</h2>
+          </div>
+
+          <div class="achievements reveal" aria-label="ההישגים שלי">
+            <div class="achievement">
+              <i data-lucide="wand-sparkles" aria-hidden="true"></i>
+              <strong id="statCreated">0</strong>
+              <span>משחקים שנוצרו</span>
+            </div>
+            <div class="achievement">
+              <i data-lucide="trophy" aria-hidden="true"></i>
+              <strong id="statWon">0</strong>
+              <span>ניצחונות</span>
+            </div>
+            <div class="achievement">
+              <i data-lucide="star" aria-hidden="true"></i>
+              <strong id="statStars">0</strong>
+              <span>נקודות שנאספו</span>
+            </div>
+          </div>
+
+          <p class="mygames-empty" id="myGamesEmpty">עדיין לא יצרתם משחק. גשו לסטודיו, בחרו רעיון ולחצו "צור משחק" — והוא יישמר כאן כדי לשחק בו שוב או לשתף.</p>
+          <div class="game-gallery" id="myGames"></div>
         </section>
 
         <section class="gallery-section" id="gallery" aria-labelledby="gallery-title">

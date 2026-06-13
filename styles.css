@@ -1670,3 +1670,142 @@ h3 {
     font-size: 1.15rem;
   }
 }
+
+/* ============================================================
+ * Difficulty selector
+ * ============================================================ */
+.diff-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.diff-button {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 12px;
+}
+
+.diff-button small {
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.diff-button.is-active small {
+  color: var(--ink);
+}
+
+/* ============================================================
+ * Preview footer buttons + share
+ * ============================================================ */
+.footer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.share-button {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 540px) {
+  .footer-buttons {
+    flex-direction: row;
+  }
+
+  .footer-buttons .primary-button {
+    flex: 1 1 60%;
+  }
+
+  .footer-buttons .share-button {
+    flex: 1 1 40%;
+  }
+}
+
+/* ============================================================
+ * My-space: achievements + my games
+ * ============================================================ */
+.mygames-section {
+  margin-top: 12px;
+}
+
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 18px 12px;
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  text-align: center;
+}
+
+.achievement i {
+  color: var(--accent, #28f3e4);
+}
+
+.achievement strong {
+  font-family: "Rubik", sans-serif;
+  font-size: 1.8rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.achievement span {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.mygames-empty {
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.game-card.mine .mine-idea {
+  min-height: 2.4em;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.mine-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.mine-actions .my-play {
+  flex: 1;
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .achievements {
+    gap: 8px;
+  }
+
+  .achievement strong {
+    font-size: 1.45rem;
+  }
+
+  .achievement span {
+    font-size: 0.74rem;
+  }
+}

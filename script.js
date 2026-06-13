@@ -99,22 +99,106 @@ const galleryItems = [
   },
 ];
 
+const difficulties = [
+  { id: "easy", label: "קל", icon: "smile", note: "לראשונים" },
+  { id: "normal", label: "רגיל", icon: "meh", note: "מאוזן" },
+  { id: "hard", label: "קשה", icon: "flame", note: "לאלופים" },
+];
+
 const state = {
   genre: genres[0],
   character: characters[0],
   world: worlds[0],
   idea: ideas[0],
+  difficulty: difficulties[1],
   building: false,
   createdCount: 0,
 };
+
+/* ---------------- localStorage: my games + stats (no backend, no PII) ---------------- */
+const STORE_KEY = "gamespark.v1";
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    return data && typeof data === "object"
+      ? { games: Array.isArray(data.games) ? data.games : [], stats: data.stats || {} }
+      : { games: [], stats: {} };
+  } catch (e) {
+    return { games: [], stats: {} };
+  }
+}
+function saveStore(store) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { /* quota / private mode */ }
+}
+let store = loadStore();
+
+function statBump(key, by = 1) {
+  store.stats[key] = (store.stats[key] || 0) + by;
+  saveStore(store);
+  renderStats();
+}
+
+// normalize: selection.difficulty may be an id string or an object
+function diffId(sel) {
+  return typeof sel.difficulty === "string" ? sel.difficulty : (sel.difficulty && sel.difficulty.id) || "normal";
+}
+
+// Save a created game (dedupe by genre+character+world+idea+difficulty)
+function rememberGame(sel) {
+  const sig = `${sel.genre.id}|${sel.character.id}|${sel.world.id}|${diffId(sel)}|${sel.idea}`;
+  if (store.games.some((g) => g.sig === sig)) return;
+  store.games.unshift({
+    sig,
+    title: sel.title,
+    idea: sel.idea,
+    genreId: sel.genre.id,
+    characterId: sel.character.id,
+    worldId: sel.world.id,
+    difficultyId: diffId(sel),
+    ts: Date.now(),
+  });
+  store.games = store.games.slice(0, 12); // keep the latest 12
+  saveStore(store);
+  renderMyGames();
+}
+
+// Reconstruct a launch selection from a stored / shared record
+function selectionFromRecord(rec) {
+  const genre = genres.find((g) => g.id === rec.genreId) || genres[0];
+  const character = characters.find((c) => c.id === rec.characterId) || characters[0];
+  const world = worlds.find((w) => w.id === rec.worldId) || worlds[0];
+  const difficulty = difficulties.find((d) => d.id === rec.difficultyId) || difficulties[1];
+  const idea = rec.idea || rec.title || "המשחק שלי";
+  return { genre, character, world, difficulty: difficulty.id, idea, title: rec.title || titleFromIdea(idea) };
+}
+
+/* ---------------- share via URL hash (#play=<base64>) ---------------- */
+function encodeSelection(sel) {
+  const payload = { g: sel.genre.id, c: sel.character.id, w: sel.world.id, d: diffId(sel), i: sel.idea, t: sel.title };
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); } catch (e) { return ""; }
+}
+function decodeSelection(code) {
+  try {
+    const p = JSON.parse(decodeURIComponent(escape(atob(code))));
+    return selectionFromRecord({ genreId: p.g, characterId: p.c, worldId: p.w, difficultyId: p.d, idea: p.i, title: p.t });
+  } catch (e) { return null; }
+}
 
 const $ = (selector) => document.querySelector(selector);
 
 const elements = {
   ideaInput: $("#ideaInput"),
   genreOptions: $("#genreOptions"),
+  difficultyOptions: $("#difficultyOptions"),
   characterOptions: $("#characterOptions"),
   worldOptions: $("#worldOptions"),
+  myGames: $("#myGames"),
+  myGamesEmpty: $("#myGamesEmpty"),
+  statCreated: $("#statCreated"),
+  statWon: $("#statWon"),
+  statStars: $("#statStars"),
+  shareGame: $("#shareGame"),
   previewTitle: $("#previewTitle"),
   hudGenre: $("#hudGenre"),
   hudGoal: $("#hudGoal"),
@@ -175,7 +259,79 @@ function renderOptions() {
     )
     .join("");
 
+  if (elements.difficultyOptions) {
+    elements.difficultyOptions.innerHTML = difficulties
+      .map(
+        (d) => `
+        <button class="option-button diff-button ${d.id === state.difficulty.id ? "is-active" : ""}" type="button" data-difficulty="${d.id}">
+          ${icon(d.icon)}
+          <span>${d.label}</span>
+          <small>${d.note}</small>
+        </button>
+      `
+      )
+      .join("");
+  }
+
   window.lucide?.createIcons();
+}
+
+function renderStats() {
+  if (!elements.statCreated) return;
+  elements.statCreated.textContent = store.stats.created || 0;
+  elements.statWon.textContent = store.stats.won || 0;
+  elements.statStars.textContent = store.stats.stars || 0;
+}
+
+function renderMyGames() {
+  if (!elements.myGames) return;
+  if (!store.games.length) {
+    elements.myGames.innerHTML = "";
+    if (elements.myGamesEmpty) elements.myGamesEmpty.hidden = false;
+    return;
+  }
+  if (elements.myGamesEmpty) elements.myGamesEmpty.hidden = true;
+  const labelOf = (arr, id, key = "label") => (arr.find((x) => x.id === id) || arr[0])[key];
+  elements.myGames.innerHTML = store.games
+    .map((g, index) => {
+      const world = worlds.find((w) => w.id === g.worldId) || worlds[0];
+      const genreLabel = labelOf(genres, g.genreId);
+      const diffLabel = labelOf(difficulties, g.difficultyId);
+      return `
+        <article class="game-card mine reveal" style="animation-delay:${index * 45}ms;">
+          <div class="game-art" style="--art-bg:${world.swatch}; --sprite-bg:${world.swatch}; --sprite-x:${30 + (index % 3) * 20}%;"></div>
+          <h3>${g.title}</h3>
+          <p class="mine-idea">${g.idea}</p>
+          <div class="game-tags"><span>${genreLabel}</span><span>${diffLabel}</span></div>
+          <div class="mine-actions">
+            <button class="primary-button wide my-play" type="button" data-my-play="${index}">${icon("play")} שחקו</button>
+            <button class="icon-button my-share" type="button" data-my-share="${index}" aria-label="שתפו את המשחק">${icon("share-2")}</button>
+            <button class="icon-button my-del" type="button" data-my-del="${index}" aria-label="מחקו מהרשימה">${icon("trash-2")}</button>
+          </div>
+        </article>`;
+    })
+    .join("");
+  window.lucide?.createIcons();
+}
+
+async function shareSelection(sel, anchorBtn) {
+  const code = encodeSelection(sel);
+  const url = `${location.origin}${location.pathname}#play=${code}`;
+  let copied = false;
+  try {
+    if (navigator.share) { await navigator.share({ title: sel.title, text: `שחקו במשחק שיצרתי: ${sel.title}`, url }); copied = true; }
+    else if (navigator.clipboard) { await navigator.clipboard.writeText(url); copied = true; }
+  } catch (e) { /* user cancelled share */ }
+  if (!copied) {
+    try { await navigator.clipboard.writeText(url); copied = true; } catch (e) { /* ignore */ }
+  }
+  if (anchorBtn) {
+    const original = anchorBtn.innerHTML;
+    anchorBtn.innerHTML = `${icon("check")} הקישור הועתק`;
+    window.lucide?.createIcons();
+    setTimeout(() => { anchorBtn.innerHTML = original; window.lucide?.createIcons(); }, 1800);
+  }
+  return url;
 }
 
 // Map each gallery item's Hebrew genre label back to a real genre/world/character
@@ -275,6 +431,39 @@ function bindOptionClicks() {
     renderOptions();
     updatePreview();
   });
+
+  if (elements.difficultyOptions) {
+    elements.difficultyOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-difficulty]");
+      if (!button) return;
+      state.difficulty = difficulties.find((d) => d.id === button.dataset.difficulty) || difficulties[1];
+      renderOptions();
+      updatePreview();
+    });
+  }
+
+  if (elements.myGames) {
+    elements.myGames.addEventListener("click", (event) => {
+      const play = event.target.closest("[data-my-play]");
+      const share = event.target.closest("[data-my-share]");
+      const del = event.target.closest("[data-my-del]");
+      if (play) {
+        const rec = store.games[Number(play.dataset.myPlay)];
+        if (rec) window.GameSpark?.launch(selectionFromRecord(rec));
+      } else if (share) {
+        const rec = store.games[Number(share.dataset.myShare)];
+        if (rec) shareSelection(selectionFromRecord(rec), share);
+      } else if (del) {
+        store.games.splice(Number(del.dataset.myDel), 1);
+        saveStore(store);
+        renderMyGames();
+      }
+    });
+  }
+
+  if (elements.shareGame) {
+    elements.shareGame.addEventListener("click", () => shareSelection(currentSelection(), elements.shareGame));
+  }
 }
 
 function createGradient(ctx, top, bottom, width, height) {
@@ -450,6 +639,7 @@ function currentSelection() {
     genre: state.genre,
     character: state.character,
     world: state.world,
+    difficulty: state.difficulty.id,
     idea,
     title: titleFromIdea(idea) || "המשחק שלי",
   };
@@ -476,7 +666,10 @@ function simulateCreate() {
     elements.aiThinking.classList.remove("is-visible");
     updatePreview();
     window.lucide?.createIcons();
-    window.GameSpark?.launch(currentSelection());
+    const sel = currentSelection();
+    rememberGame(sel);
+    statBump("created");
+    window.GameSpark?.launch(sel);
   }, 900);
 }
 
@@ -516,14 +709,43 @@ function initInteractions() {
   window.addEventListener("resize", resizeCanvas);
 }
 
+function maybeLaunchShared() {
+  const m = location.hash.match(/[#&]play=([^&]+)/);
+  if (!m) return;
+  const sel = decodeSelection(m[1]);
+  if (sel) {
+    // reflect the shared choices in the studio, then launch
+    state.genre = genres.find((g) => g.id === sel.genre.id) || state.genre;
+    state.character = characters.find((c) => c.id === sel.character.id) || state.character;
+    state.world = worlds.find((w) => w.id === sel.world.id) || state.world;
+    state.difficulty = difficulties.find((d) => d.id === (sel.difficulty || "normal")) || state.difficulty;
+    if (elements.ideaInput && sel.idea) elements.ideaInput.value = sel.idea;
+    renderOptions();
+    updatePreview();
+    setTimeout(() => window.GameSpark?.launch(sel), 350);
+  }
+  // clear the hash so refresh doesn't relaunch unexpectedly
+  history.replaceState(null, "", location.pathname + location.search);
+}
+
 function init() {
   renderOptions();
   renderGallery();
+  renderMyGames();
+  renderStats();
   bindOptionClicks();
   initInteractions();
   updatePreview();
   resizeCanvas();
   draw();
+  // record wins/losses + stars from the engine
+  window.GameSpark?.setStatHook((ev) => {
+    if (ev.type === "win") {
+      statBump("won");
+      if (ev.stars) statBump("stars", ev.stars);
+    }
+  });
+  maybeLaunchShared();
   window.lucide?.createIcons();
 }
 

@@ -55,6 +55,42 @@
     };
   })();
 
+  /* ---------- reduced motion ---------- */
+  const reduceMotion = () =>
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- juice: particle burst (transform/opacity only) ---------- */
+  const particles = [];
+  function burst(x, y, color, n = 12) {
+    if (reduceMotion()) return;
+    for (let i = 0; i < n; i += 1) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.4;
+      const sp = rand(1.4, 3.6);
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, color });
+    }
+  }
+  function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i -= 1) {
+      const p = particles[i];
+      p.x += p.vx * (dt / 16);
+      p.y += p.vy * (dt / 16);
+      p.vy += 0.08 * (dt / 16);
+      p.life -= dt / 520;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+  function renderParticles(ctx) {
+    particles.forEach((p) => {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3 + p.life * 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
   /* ---------- input ---------- */
   const keys = Object.create(null);
   const touch = Object.create(null);
@@ -166,24 +202,32 @@
     } else if (mode === "puzzle") {
       const n = cfg.target;
       for (let i = 0; i < n; i += 1) {
-        g.items.push({ x: w * (0.18 + (i / Math.max(1, n - 1)) * 0.64), y: h * (0.35 + (i % 2) * 0.28), r: 26, taken: false, order: i + 1, hue: pal[2] });
+        g.items.push({ x: w * (0.18 + (i / Math.max(1, n - 1)) * 0.64), y: h * (0.30 + (i % 2) * 0.22), r: 26, taken: false, order: i + 1, hue: pal[2] });
       }
       g.extra.next = 1;
+      // Spawn the hero in a clear safe zone (bottom center) so it never
+      // overlaps a ring on frame 1 (which would wrongly cost a life).
+      g.hero.x = w * 0.5; g.hero.y = h - 50;
     } else if (mode === "race") {
       g.hero.x = w * 0.5; g.hero.y = h - 60;
       g.extra.dist = 0;
       g.extra.finish = cfg.target * 100; // distance to finish
-      g.extra.speed = 2.4;
+      g.extra.speed = 2.4 * cfg.speedMul;
+      g.extra.baseSpeed = 2.4 * cfg.speedMul;
     } else if (mode === "platform") {
+      // Reachable staircase: each step rises <= ~62px (jump height ~96px gives margin)
+      // and is within a comfortable horizontal hop. Verified winnable.
+      const groundY = h - 36;
       g.extra.platforms = [
-        { x: w * 0.05, y: h - 36, w: w * 0.9, h: 36 }, // ground
-        { x: w * 0.15, y: h * 0.7, w: 120, h: 16 },
-        { x: w * 0.42, y: h * 0.55, w: 120, h: 16 },
-        { x: w * 0.66, y: h * 0.4, w: 130, h: 16 },
-        { x: w * 0.84, y: h * 0.26, w: 110, h: 16 },
+        { x: w * 0.02, y: groundY, w: w * 0.96, h: 36 }, // ground
+        { x: w * 0.16, y: groundY - 86, w: 150, h: 16 },
+        { x: w * 0.40, y: groundY - 150, w: 150, h: 16 },
+        { x: w * 0.62, y: groundY - 214, w: 150, h: 16 },
+        { x: w * 0.82, y: groundY - 278, w: 140, h: 16 },
       ];
-      g.extra.flag = { x: w * 0.88, y: h * 0.26 - 60, w: 10, h: 56 };
-      g.hero.x = w * 0.1; g.hero.y = h - 70;
+      const top = g.extra.platforms[g.extra.platforms.length - 1];
+      g.extra.flag = { x: top.x + top.w - 28, y: top.y - 56, w: 10, h: 56 };
+      g.hero.x = w * 0.07; g.hero.y = groundY - 34;
       for (let i = 1; i < g.extra.platforms.length; i += 1) {
         const p = g.extra.platforms[i];
         g.items.push({ x: p.x + p.w / 2, y: p.y - 26, r: 12, taken: false, hue: pal[3], ph: rand(0, 6) });
@@ -225,7 +269,7 @@
         g.items.forEach((it) => {
           if (it.taken) return;
           if (Math.hypot(it.x - g.hero.x, it.y - g.hero.y) < it.r + g.hero.r) {
-            it.taken = true; g.score += 1; Sound.pickup();
+            it.taken = true; g.score += 1; Sound.pickup(); burst(it.x, it.y, it.hue);
             if (g.score >= g.target) endGame(true);
           }
         });
@@ -233,7 +277,7 @@
         g.items.forEach((it) => {
           if (it.taken) return;
           if (Math.hypot(it.x - g.hero.x, it.y - g.hero.y) < it.r + g.hero.r) {
-            it.taken = true; g.score += 1; Sound.pickup();
+            it.taken = true; g.score += 1; Sound.pickup(); burst(it.x, it.y, it.hue);
             if (g.score >= g.target) { g.extra.gate.open = true; }
           }
         });
@@ -246,7 +290,7 @@
           if (it.taken) return;
           if (Math.hypot(it.x - g.hero.x, it.y - g.hero.y) < it.r + g.hero.r) {
             if (it.order === g.extra.next) {
-              it.taken = true; g.extra.next += 1; g.score += 1; Sound.pickup();
+              it.taken = true; g.extra.next += 1; g.score += 1; Sound.pickup(); burst(it.x, it.y, it.hue);
               if (g.score >= g.target) endGame(true);
             } else {
               // wrong order: lose a life, reset sequence
@@ -263,17 +307,17 @@
         if (isDown("arrowleft", "a")) g.hero.x -= sp;
         if (isDown("arrowright", "d")) g.hero.x += sp;
         g.hero.x = clamp(g.hero.x, 40, w - 40);
-        g.extra.speed = clamp(g.extra.speed + dt * 0.0004, 2.4, 6);
+        g.extra.speed = clamp(g.extra.speed + dt * 0.0004, g.extra.baseSpeed, 6 * cfg.speedMul);
         g.extra.dist += g.extra.speed * dt * 0.06;
-        // spawn obstacles
-        if (Math.random() < 0.03 + g.extra.dist / g.extra.finish * 0.04) {
+        // spawn obstacles (rate scales with difficulty/level via speedMul)
+        if (Math.random() < (0.03 + g.extra.dist / g.extra.finish * 0.04) * cfg.speedMul) {
           g.obstacles.push({ x: rand(50, w - 50), y: -30, w: rand(34, 64), h: 26, hue: cfg.character.colors[0] });
         }
         g.obstacles.forEach((o) => { o.y += g.extra.speed * dt * 0.16; });
         g.obstacles = g.obstacles.filter((o) => o.y < h + 40);
         for (const o of g.obstacles) {
           if (Math.abs(o.x - g.hero.x) < o.w / 2 + g.hero.r - 6 && Math.abs(o.y - g.hero.y) < o.h / 2 + g.hero.r - 6) {
-            g.lives -= 1; Sound.hit(); o.y = h + 100;
+            g.lives -= 1; Sound.hit(); burst(g.hero.x, g.hero.y, "#ff6c7a"); o.y = h + 100;
             if (g.lives <= 0) { endGame(false); break; }
           }
         }
@@ -285,7 +329,7 @@
         else if (isDown("arrowright", "d")) g.hero.vx = sp;
         else g.hero.vx *= 0.7;
         if (isDown("arrowup", "w", " ") && g.hero.onGround) {
-          g.hero.vy = -7.4; g.hero.onGround = false; Sound.jump();
+          g.hero.vy = -8.4; g.hero.onGround = false; Sound.jump();
         }
         g.hero.vy += 0.32 * (dt / 16);
         g.hero.x = clamp(g.hero.x + g.hero.vx, 20, w - 20);
@@ -300,7 +344,7 @@
         if (g.hero.y > h + 60) { g.lives -= 1; Sound.hit(); g.hero.x = w * 0.1; g.hero.y = h - 70; g.hero.vy = 0; if (g.lives <= 0) endGame(false); }
         g.items.forEach((it) => {
           if (it.taken) return;
-          if (Math.hypot(it.x - g.hero.x, it.y - g.hero.y) < it.r + g.hero.r) { it.taken = true; g.score += 1; Sound.pickup(); }
+          if (Math.hypot(it.x - g.hero.x, it.y - g.hero.y) < it.r + g.hero.r) { it.taken = true; g.score += 1; Sound.pickup(); burst(it.x, it.y, it.hue); }
         });
         const f = g.extra.flag;
         if (g.score >= g.target && g.hero.x > f.x - 24 && g.hero.y < f.y + f.h + 20) endGame(true);
@@ -410,16 +454,33 @@
   /* =====================================================================
    *  DETERMINISTIC "AI" GENERATOR — choices -> real game config
    * ===================================================================== */
+  // difficulty -> tuning multipliers. level (1..3) ramps within a game.
+  const DIFF = {
+    easy: { id: "easy", label: "קל", tMul: 0.8, timeMul: 1.35, livesAdd: 1, speedMul: 0.85 },
+    normal: { id: "normal", label: "רגיל", tMul: 1, timeMul: 1, livesAdd: 0, speedMul: 1 },
+    hard: { id: "hard", label: "קשה", tMul: 1.4, timeMul: 0.8, livesAdd: -1, speedMul: 1.25 },
+  };
+  const MAX_LEVEL = 3;
+
   function buildConfig(sel) {
     const genre = sel.genre;
+    const diff = DIFF[sel.difficulty] || DIFF.normal;
+    const level = clamp(sel.level || 1, 1, MAX_LEVEL);
+    const lvlMul = 1 + (level - 1) * 0.4; // each level adds 40% target/speed
+
     const tuning = {
-      space: { target: 10, time: 35, lives: 0, useTimer: true, goalText: (n) => `אספו ${n} כוכבים לפני שהזמן נגמר`, help: "השתמשו בחיצים כדי לאסוף את כל הכוכבים" },
-      adventure: { target: 4, time: 0, lives: 0, useTimer: false, goalText: (n) => `מצאו ${n} מפתחות ופִּתחו את השער`, help: "אספו מפתחות, ואז הגיעו לשער המואר" },
-      puzzle: { target: 5, time: 0, lives: 3, useTimer: false, goalText: (n) => `הדליקו ${n} טבעות לפי הסדר 1→${n}`, help: "געו בטבעות לפי המספרים בסדר עולה" },
-      race: { target: 12, time: 0, lives: 3, useTimer: false, goalText: () => "התחמקו מהמכשולים והגיעו לקו הסיום", help: "חיצים שמאלה/ימינה כדי לעקוף מכשולים" },
+      space: { target: 8, time: 32, lives: 0, useTimer: true, goalText: (n) => `אספו ${n} כוכבים לפני שהזמן נגמר`, help: "השתמשו בחיצים כדי לאסוף את כל הכוכבים" },
+      adventure: { target: 3, time: 0, lives: 0, useTimer: false, goalText: (n) => `מצאו ${n} מפתחות ופִּתחו את השער`, help: "אספו מפתחות, ואז הגיעו לשער המואר" },
+      puzzle: { target: 4, time: 0, lives: 3, useTimer: false, goalText: (n) => `הדליקו ${n} טבעות לפי הסדר 1→${n}`, help: "געו בטבעות לפי המספרים בסדר עולה" },
+      race: { target: 10, time: 0, lives: 3, useTimer: false, goalText: () => "התחמקו מהמכשולים והגיעו לקו הסיום", help: "חיצים שמאלה/ימינה כדי לעקוף מכשולים" },
       platform: { target: 4, time: 0, lives: 3, useTimer: false, goalText: () => "אספו את הכוכבים והגיעו לדגל", help: "חיצים לזוז, רווח/למעלה לקפוץ" },
     };
     const tune = tuning[genre.id] || tuning.space;
+
+    const target = Math.max(1, Math.round(tune.target * diff.tMul * lvlMul));
+    const time = Math.round(tune.time * diff.timeMul / (1 + (level - 1) * 0.12));
+    const lives = tune.lives > 0 ? Math.max(1, tune.lives + diff.livesAdd) : 0;
+
     return {
       genre,
       character: sel.character,
@@ -427,11 +488,14 @@
       palette: sel.world.palette,
       idea: sel.idea,
       title: sel.title,
-      target: tune.target,
-      time: tune.time,
-      lives: tune.lives,
+      difficulty: diff,
+      level,
+      speedMul: diff.speedMul * (1 + (level - 1) * 0.18),
+      target,
+      time,
+      lives,
       useTimer: tune.useTimer,
-      goalText: tune.goalText(tune.target),
+      goalText: tune.goalText(target),
       help: tune.help,
     };
   }
@@ -514,7 +578,7 @@
     state.ctx = state.canvas.getContext("2d");
 
     modal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", close));
-    modal.querySelector(".play-restart").addEventListener("click", () => start(state.cfg));
+    modal.querySelector(".play-restart").addEventListener("click", () => start(buildConfig(state.selection)));
     modal.querySelector(".play-sound").addEventListener("click", (e) => {
       const muted = !Sound.isMuted();
       Sound.setMuted(muted);
@@ -522,9 +586,13 @@
       window.lucide?.createIcons();
     });
     hud.overlayBtn.addEventListener("click", () => {
-      if (overlay.dataset.action === "play") { overlay.hidden = true; runLoop(); }
-      else if (overlay.dataset.action === "again") start(state.cfg);
-      else if (overlay.dataset.action === "next") { close(); document.querySelector("#studio")?.scrollIntoView({ behavior: "smooth" }); }
+      const action = overlay.dataset.action;
+      if (action === "play") { overlay.hidden = true; runLoop(); }
+      else if (action === "again") start(buildConfig(state.selection));
+      else if (action === "level" && state.pendingNext) {
+        state.selection = state.pendingNext;
+        start(buildConfig(state.selection));
+      } else if (action === "next") { close(); document.querySelector("#studio")?.scrollIntoView({ behavior: "smooth" }); }
     });
 
     // touch buttons
@@ -546,7 +614,7 @@
   function onModalKeys(e) {
     if (modal.hidden) return;
     if (e.key === "Escape") close();
-    if (e.key.toLowerCase() === "r") start(state.cfg);
+    if (e.key.toLowerCase() === "r") start(buildConfig(state.selection));
   }
 
   function fitCanvas() {
@@ -569,19 +637,55 @@
     window.lucide?.createIcons();
   }
 
+  function adaptTouchPad(modeId) {
+    if (!touchPad) return;
+    const up = touchPad.querySelector('[data-touch="arrowup"]');
+    const down = touchPad.querySelector('[data-touch="arrowdown"]');
+    const jump = touchPad.querySelector(".touch-jump");
+    const topDown = modeId === "space" || modeId === "adventure" || modeId === "puzzle";
+    // top-down: need up/down, no jump. platform: left/right + jump. race: left/right only.
+    if (up) up.style.visibility = topDown ? "visible" : "hidden";
+    if (down) down.style.visibility = topDown ? "visible" : "hidden";
+    if (jump) jump.style.display = modeId === "platform" ? "" : "none";
+  }
+
   function start(cfg) {
     state.cfg = cfg;
+    particles.length = 0;
     fitCanvas();
     mode = makeMode(cfg, state.dpW, state.dpH);
+    adaptTouchPad(cfg.genre.id);
+    const levelTag = `שלב ${cfg.level}/${MAX_LEVEL} · ${cfg.difficulty.label}`;
     hud.title.textContent = cfg.title;
-    hud.goal.textContent = cfg.goalText;
+    hud.goal.textContent = `${levelTag} — ${cfg.goalText}`;
     hud.help.textContent = cfg.help + " · ESC לסגירה · R להתחלה מחדש";
     hud.score.textContent = "0";
     if (cfg.lives > 0) { hud.lives.hidden = false; hud.livesVal.textContent = cfg.lives; } else hud.lives.hidden = true;
     if (cfg.useTimer) { hud.timer.hidden = false; hud.timerVal.textContent = Math.ceil(cfg.time); } else hud.timer.hidden = true;
     cancelAnimationFrame(state.raf);
     state.running = false;
-    showOverlay("play", "sparkles", "מוכנים לשחק?", cfg.goalText, "שחקו");
+    showOverlay("play", "sparkles", `מוכנים? ${levelTag}`, cfg.goalText, "שחקו");
+  }
+
+  function onWin(cfg) {
+    // celebratory burst across the canvas
+    for (let i = 0; i < 5; i += 1) burst(rand(40, state.dpW - 40), rand(40, state.dpH * 0.7), cfg.palette[2 + (i % 2)], 10);
+    if (typeof state.onStat === "function") {
+      state.onStat({ type: "win", cfg, stars: mode.g.score });
+    }
+    if (cfg.level < MAX_LEVEL) {
+      const nextLevel = cfg.level + 1;
+      state.pendingNext = { ...state.selection, level: nextLevel };
+      showOverlay(
+        "level",
+        "arrow-up",
+        `שלב ${cfg.level} הושלם! 🎉`,
+        `מצוין! מוכנים לשלב ${nextLevel} מתוך ${MAX_LEVEL}? זה יהיה קצת יותר מאתגר.`,
+        `לשלב ${nextLevel}`
+      );
+    } else {
+      showOverlay("next", "party-popper", "סיימתם את כל השלבים! 🏆", `ניצחתם בכל ${MAX_LEVEL} השלבים של "${cfg.title}". רוצים ליצור משחק חדש?`, "צרו משחק חדש");
+    }
   }
 
   function runLoop() {
@@ -594,7 +698,9 @@
       dt = clamp(dt, 0, 50);
       state.t = now;
       mode.update(dt);
+      updateParticles(dt);
       mode.render(state.ctx, now);
+      renderParticles(state.ctx);
 
       // HUD sync
       hud.score.textContent = mode.g.score;
@@ -604,8 +710,9 @@
       if (mode.g.ended) {
         state.running = false;
         if (mode.g.won) {
-          showOverlay("next", "party-popper", "כל הכבוד! ניצחתם 🎉", `סיימתם את "${state.cfg.title}". רוצים ליצור משחק חדש?`, "צרו משחק חדש");
+          onWin(state.cfg);
         } else {
+          if (typeof state.onStat === "function") state.onStat({ type: "lose", cfg: state.cfg });
           showOverlay("again", "rotate-ccw", "כמעט! נסו שוב", "התקרבתם למטרה. עוד ניסיון אחד ותצליחו!", "שחקו שוב");
         }
         return;
@@ -617,7 +724,8 @@
 
   function launch(selection) {
     buildModal();
-    const cfg = buildConfig(selection);
+    state.selection = { difficulty: "normal", level: 1, ...selection };
+    const cfg = buildConfig(state.selection);
     modal.hidden = false;
     document.body.style.overflow = "hidden";
     requestAnimationFrame(() => { window.lucide?.createIcons(); start(cfg); });
@@ -634,5 +742,85 @@
     if (modal && !modal.hidden && state.cfg) { fitCanvas(); }
   });
 
-  window.GameSpark = { launch, close, Sound };
+  function setStatHook(fn) { state.onStat = fn; }
+
+  /* ---------------------------------------------------------------
+   *  Headless winnability self-test (used by QA, no rendering).
+   *  Drives makeMode update() while steering the hero toward the
+   *  current objective each frame. Returns {won, frames, score}.
+   * --------------------------------------------------------------- */
+  function selfTest(selection, opts) {
+    const o = opts || {};
+    const W = o.w || 960, H = o.h || 560;
+    const cfg = buildConfig({ difficulty: "normal", level: 1, ...selection });
+    const m = makeMode(cfg, W, H);
+    const g = m.g;
+    const maxFrames = o.maxFrames || 6000;
+    const dt = 16;
+    let frames = 0;
+
+    // teleport-steering: place hero at the next objective, set inputs so
+    // mode logic (collision / jump) still runs naturally.
+    const nextTarget = () => {
+      if (cfg.genre.id === "puzzle") return g.items.find((it) => it.order === g.extra.next) || null;
+      const t = g.items.find((it) => !it.taken);
+      if (t) return t;
+      if (cfg.genre.id === "adventure" && g.extra.gate.open) return { x: g.extra.gate.x, y: g.extra.gate.y };
+      if (cfg.genre.id === "platform") return { x: g.extra.flag.x, y: g.extra.flag.y };
+      return null;
+    };
+
+    // reset all inputs
+    Object.keys(keys).forEach((k) => (keys[k] = false));
+    Object.keys(touch).forEach((k) => (touch[k] = false));
+
+    while (!g.ended && frames < maxFrames) {
+      if (cfg.genre.id === "race") {
+        // align hero to a gap: move toward x that has no obstacle near
+        const danger = g.obstacles.find((ob) => ob.y > H * 0.4 && Math.abs(ob.x - g.hero.x) < 60);
+        keys.arrowleft = !!(danger && danger.x > g.hero.x);
+        keys.arrowright = !!(danger && danger.x <= g.hero.x);
+      } else if (cfg.genre.id === "platform") {
+        const tg = nextTarget();
+        if (tg) {
+          keys.arrowright = tg.x > g.hero.x + 4;
+          keys.arrowleft = tg.x < g.hero.x - 4;
+          // jump whenever grounded and the target is higher (climb the staircase)
+          keys.arrowup = g.hero.onGround && tg.y < g.hero.y - 6;
+        }
+      } else if (cfg.genre.id === "puzzle") {
+        // Deliberate play: route to the next ring while avoiding brushing
+        // any other not-yet-correct ring (approach from a clear lane below).
+        const tg = nextTarget();
+        if (tg) {
+          const safeR = 26 + g.hero.r + 6;
+          const others = g.items.filter((it) => !it.taken && it.order !== g.extra.next);
+          // step proposal toward target
+          let nx = g.hero.x + clamp(tg.x - g.hero.x, -5, 5);
+          let ny = g.hero.y + clamp(tg.y - g.hero.y, -5, 5);
+          const brushes = (x, y) => others.some((it) => Math.hypot(it.x - x, it.y - y) < safeR);
+          if (brushes(nx, ny)) {
+            // detour: move horizontally first along a clear lane near the bottom
+            ny = g.hero.y + clamp((H - 60) - g.hero.y, -5, 5);
+            nx = g.hero.x + clamp(tg.x - g.hero.x, -5, 5);
+            if (brushes(nx, ny)) { nx = g.hero.x; } // wait this frame
+          }
+          g.hero.x = nx; g.hero.y = ny;
+        }
+      } else {
+        // top-down: snap toward target
+        const tg = nextTarget();
+        if (tg) {
+          g.hero.x += clamp(tg.x - g.hero.x, -6, 6);
+          g.hero.y += clamp(tg.y - g.hero.y, -6, 6);
+        }
+      }
+      m.update(dt);
+      frames += 1;
+    }
+    Object.keys(keys).forEach((k) => (keys[k] = false));
+    return { won: g.won, ended: g.ended, frames, score: g.score, mode: cfg.genre.id, target: cfg.target };
+  }
+
+  window.GameSpark = { launch, close, Sound, setStatHook, selfTest, DIFF, MAX_LEVEL };
 })();

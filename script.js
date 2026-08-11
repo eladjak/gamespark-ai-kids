@@ -292,6 +292,8 @@ function renderMyGames() {
   }
   if (elements.myGamesEmpty) elements.myGamesEmpty.hidden = true;
   const labelOf = (arr, id, key = "label") => (arr.find((x) => x.id === id) || arr[0])[key];
+  // The card SKELETON is markup we control; the child's own title/idea are text,
+  // never markup, so they go in with textContent (same as the preview does above).
   elements.myGames.innerHTML = store.games
     .map((g, index) => {
       const world = worlds.find((w) => w.id === g.worldId) || worlds[0];
@@ -300,8 +302,8 @@ function renderMyGames() {
       return `
         <article class="game-card mine reveal" style="animation-delay:${index * 45}ms;">
           <div class="game-art" style="--art-bg:${world.swatch}; --sprite-bg:${world.swatch}; --sprite-x:${30 + (index % 3) * 20}%;"></div>
-          <h3>${g.title}</h3>
-          <p class="mine-idea">${g.idea}</p>
+          <h3 class="mine-title"></h3>
+          <p class="mine-idea"></p>
           <div class="game-tags"><span>${genreLabel}</span><span>${diffLabel}</span></div>
           <div class="mine-actions">
             <button class="primary-button wide my-play" type="button" data-my-play="${index}">${icon("play")} שחקו</button>
@@ -311,6 +313,12 @@ function renderMyGames() {
         </article>`;
     })
     .join("");
+  elements.myGames.querySelectorAll(".game-card.mine").forEach((card, index) => {
+    const g = store.games[index];
+    if (!g) return;
+    card.querySelector(".mine-title").textContent = g.title;
+    card.querySelector(".mine-idea").textContent = g.idea;
+  });
   window.lucide?.createIcons();
 }
 

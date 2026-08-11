@@ -57,42 +57,42 @@ const ideas = [
 const galleryItems = [
   {
     title: "מסע הכוכבים של מיקה",
-    creator: "יעל, 10",
+    blurb: "אוספים כוכבים לפני שהזמן נגמר",
     genre: "חלל",
     bg: "linear-gradient(180deg, #101f3d 0 58%, #0c5a68 58%)",
     sprite: "linear-gradient(180deg, #ff4fa3, #ffd15c 52%, #28f3e4)",
   },
   {
     title: "יער הרובוטים",
-    creator: "אורי, 9",
+    blurb: "מחפשים מפתחות בין העצים",
     genre: "הרפתקה",
     bg: "linear-gradient(180deg, #102b24 0 52%, #17744f 52%)",
     sprite: "linear-gradient(180deg, #79ffb0, #28f3e4 54%, #a987ff)",
   },
   {
     title: "מירוץ ניאון",
-    creator: "דניאל, 12",
+    blurb: "מתחמקים ממכשולים במסלול ניאון",
     genre: "מירוץ",
     bg: "linear-gradient(180deg, #161626 0 48%, #432153 48%, #1c7080 80%)",
     sprite: "linear-gradient(180deg, #ffd15c, #ff4fa3 52%, #28f3e4)",
   },
   {
     title: "חידת האלמוגים",
-    creator: "נועה, 11",
+    blurb: "מסדרים טבעות לפי הסדר הנכון",
     genre: "פאזל",
     bg: "linear-gradient(180deg, #052033 0 58%, #056b8a 58%)",
     sprite: "linear-gradient(180deg, #28f3e4, #79ffb0 58%, #f7fbff)",
   },
   {
     title: "טירת העננים",
-    creator: "איתמר, 8",
+    blurb: "קופצים בין עננים עד הדגל",
     genre: "פלטפורמה",
     bg: "linear-gradient(180deg, #20152e 0 56%, #614177 56%)",
     sprite: "linear-gradient(180deg, #a987ff, #ffd15c 52%, #f7fbff)",
   },
   {
     title: "שערי הזמן",
-    creator: "מאיה, 13",
+    blurb: "מוצאים את המפתחות שפותחים את השערים",
     genre: "הרפתקה",
     bg: "linear-gradient(180deg, #171a32 0 45%, #60447e 45%, #2a866f 82%)",
     sprite: "linear-gradient(180deg, #ff6c7a, #ffd15c 54%, #b9f35b)",
@@ -369,7 +369,7 @@ function renderGallery() {
         <article class="game-card reveal" style="animation-delay: ${index * 55}ms;">
           <div class="game-art" style="--art-bg: ${item.bg}; --sprite-bg: ${item.sprite}; --sprite-x: ${28 + (index % 3) * 22}%;"></div>
           <h3>${item.title}</h3>
-          <p>נוצר על ידי ${item.creator}</p>
+          <p>${item.blurb}</p>
           <div class="game-tags">
             <span>${item.genre}</span>
             <span>AI Prototype</span>
